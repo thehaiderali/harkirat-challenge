@@ -66,7 +66,7 @@ classRouter.post("/class/:id/add-student",checkTeacher,async(req,res)=>{
     if(existingClass.teacherId.toString()!==req.user._id){
         return res.status(403).json({
             success:false,
-            error:"Forbidden , not class teacher"
+            error:"Forbidden, not class teacher"
         })
     }
     const oldstudents=existingClass.studentIds
@@ -98,9 +98,13 @@ classRouter.get("/class/:id",checkTeacherOrStudent,async(req,res)=>{
         path:"studentIds",
         select:"name email"
     })
+    const classData = response.toObject();
+    classData.students = classData.studentIds;
+    delete classData.studentIds;
+    
     return res.status(200).json({
         success:true,
-        data:response
+        data:classData
     })
         
     } catch (error) {
@@ -116,7 +120,7 @@ classRouter.get("/class/:id",checkTeacherOrStudent,async(req,res)=>{
 classRouter.get("/students",checkTeacher,async(req,res)=>{
     try {
 
-     const response=await User.findOne({
+     const response=await User.find({
         role:"student"
     })
     return res.status(200).json({
@@ -136,7 +140,6 @@ classRouter.get("/students",checkTeacher,async(req,res)=>{
 
 classRouter.get("/class/:id/my-attendance",checkStudent,async(req,res)=>{
     try {
-        
      const existingClass=await Class.findById(req.params.id);
     if(!existingClass){
         return res.status(404).json({
@@ -144,12 +147,18 @@ classRouter.get("/class/:id/my-attendance",checkStudent,async(req,res)=>{
             error:"Class not found"
         })
     }
-
+    const isEnrolled = existingClass.studentIds.some(id => id.toString() === req.user._id.toString());
+    if(!isEnrolled){
+        return res.status(403).json({
+            success:false,
+            error:"Forbidden, not enrolled in class"
+        })
+    }
     const attendance=await Attendance.findOne({
         classId:existingClass._id,
         studentId:req.user._id,
     })
-    if(!attendance.status){
+    if(!attendance.status || null){
         return res.status(200).json({
             success:true,
             data:{

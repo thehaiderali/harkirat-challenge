@@ -52,7 +52,7 @@ export async function authMiddleware(req,res,next){
 
 
 
-export async function checkTeacher(){
+export async function checkTeacher(req,res,next){
      try {
     const authHeaders=req.headers.authorization;
     if(!authHeaders){

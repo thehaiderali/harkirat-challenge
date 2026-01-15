@@ -81,7 +81,7 @@ authRouter.post("/login",async(req,res)=>{
     if(!already){
         return res.status(400).json({
             success:false,
-            error:"Invalid request schema"
+            error:"Email already exists"
         })
     }
     // Validate Password

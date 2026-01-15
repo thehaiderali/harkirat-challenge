@@ -219,9 +219,10 @@ export async function checkTeacherOrStudent(req,res,next){
     if(userId===existingClass.teacherId){
         isTeacher=true;
     }
-    for (const studentId in existingClass.studentIds){
-        if(userId===studentId){
+    for (const studentId of existingClass.studentIds){
+        if(userId===studentId.toString()){
             isStudent=true
+            break
         }
     }
     if(isTeacher || isStudent){

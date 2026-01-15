@@ -2,10 +2,12 @@ import express from "express"
 import dotenv from "dotenv"
 import mongoose from "mongoose"
 import authRouter from "./routes/auth.routes.js"
+import classRouter from "./routes/class.routes.js"
 dotenv.config()
 const app=express()
 app.use(express.json())
 app.use("/auth",authRouter)
+app.use("/",classRouter)
 const port = process.env.PORT || 3000
 global.activeSession=null;
 app.listen(port,async()=>{

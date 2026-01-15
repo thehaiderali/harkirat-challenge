@@ -1,9 +1,9 @@
 import {Router} from "express";
-import { addStudentSchema, classSchema, startAttendanceSchema } from "../zod/validator";
-import { User } from "../models/user.model";
-import { Class } from "../models/class.model";
-import { checkStudent, checkTeacher, checkTeacherOrStudent } from "../middleware/auth";
-import { Attendance } from "../models/attendance.model";
+import { addStudentSchema, classSchema, startAttendanceSchema } from "../zod/validator.js";
+import { User } from "../models/user.model.js";
+import { Class } from "../models/class.model.js";
+import { checkStudent, checkTeacher, checkTeacherOrStudent } from "../middleware/auth.js";
+import { Attendance } from "../models/attendance.model.js";
 
 const classRouter=Router();
 
@@ -63,7 +63,7 @@ classRouter.post("/class/:id/add-student",checkTeacher,async(req,res)=>{
         })
     }
     // Validate Teacher owns Class
-    if(existingClass.teacherId.toString()!==req.user._id){
+    if(existingClass.teacherId.toString()!==req.user._id.toString()){
         return res.status(403).json({
             success:false,
             error:"Forbidden, not class teacher"
@@ -158,7 +158,7 @@ classRouter.get("/class/:id/my-attendance",checkStudent,async(req,res)=>{
         classId:existingClass._id,
         studentId:req.user._id,
     })
-    if(!attendance.status || null){
+    if(!attendance || !attendance.status){
         return res.status(200).json({
             success:true,
             data:{
@@ -203,7 +203,7 @@ classRouter.post("/attendance/start",checkTeacher,async(req,res)=>{
             error:"Class not found"
         })
     }
-    if(req.user._id!==existingClass.teacherId){
+    if(req.user._id.toString()!==existingClass.teacherId.toString()){
         return res.status(403).json({
             success:false,
             error:"Forbidden, not class teacher"

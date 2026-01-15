@@ -10,24 +10,23 @@ const classRouter=Router();
 
 classRouter.post("/class",checkTeacher,async(req,res)=>{
     try {
-      const {success,data}=classSchema.safeParse(req.body);
+        const {success,data}=classSchema.safeParse(req.body);
         if(!success){
-        return res.status(400).json({
-            success:false,
-            error:"Invalid request schema"
+            return res.status(400).json({
+                success:false,
+                error:"Invalid request schema"
+            })
+        }
+        const teacher=await User.findById(req.user._id.toString());
+        const newClass=await Class.create({
+            className:data.className,
+            teacherId:teacher._id,
+            studentIds:[]
         })
-    }
-    const teacher=await User.findById(req.user._id.toString());
-    const newClass=await Class.create({
-        className:data.className,
-        teacherId:teacher._id,
-        studentIds:[]
-    })
-    return res.status(201).json({
-        success:true,
-        data:newClass
-    })
-
+        return res.status(201).json({
+            success:true,
+            data:newClass
+        })
     } catch (error) {
         console.log("Error in Creating Class Route : ",error)
         return res.status(500).json({
@@ -37,61 +36,61 @@ classRouter.post("/class",checkTeacher,async(req,res)=>{
     }
 })
 
-
 classRouter.post("/class/:id/add-student",checkTeacher,async(req,res)=>{
     try {
+        const existingClass=await Class.findById(req.params.id);
+        if(!existingClass){
+            return res.status(404).json({
+                success:false,
+                error:"Class not found"
+            })
+        }
         
-     const existingClass=await Class.findById(req.params.id);
-     if(!existingClass){
-        return res.status(404).json({
-            success:false,
-            error:"Class not found"
-        })
-     }
-     const {success,data}=addStudentSchema.safeParse(req.body);
-      if(!success){
-        return res.status(400).json({
-            success:false,
-            error:"Invalid request schema"
-        })
-    }
-    const student=await User.findById(data.studentId);
-    if(!student){
-        return res.status(404).json({
-            success:false,
-            error:"Student not found"
-        })
-    }
-    if(existingClass.teacherId.toString()!==req.user._id.toString()){
-        return res.status(403).json({
-            success:false,
-            error:"Forbidden, not class teacher"
-        })
-    }
-    const alreadyEnrolled = existingClass.studentIds.some(
-    id => id.toString() === data.studentId
-    );
+        if(existingClass.teacherId.toString()!==req.user._id.toString()){
+            return res.status(403).json({
+                success:false,
+                error:"Forbidden, not class teacher"
+            })
+        }
 
-    if(alreadyEnrolled){
-        return res.status(400).json({
-            success:false,
-            error:"Student already enrolled in this class"
+        const {success,data}=addStudentSchema.safeParse(req.body);
+        if(!success){
+            return res.status(400).json({
+                success:false,
+                error:"Invalid request schema"
+            })
+        }
+
+        const student=await User.findById(data.studentId);
+        if(!student){
+            return res.status(404).json({
+                success:false,
+                error:"Student not found"
+            })
+        }
+
+        const alreadyEnrolled = existingClass.studentIds.some(
+            id => id.toString() === data.studentId
+        );
+
+            if (alreadyEnrolled) {
+            return res.status(200).json({
+                success: true,
+                data: existingClass
+            });
+        }
+        const oldstudents=existingClass.studentIds
+        const newStudents=[...oldstudents,new Types.ObjectId(data.studentId)]
+        const newClass=await Class.findByIdAndUpdate(existingClass._id,{
+            studentIds:newStudents,
+        },{
+            new:true
         })
-    }
 
-    const oldstudents=existingClass.studentIds
-    const newStudents=[...oldstudents,new Types.ObjectId(data.studentId)]
-    const newClass=await Class.findByIdAndUpdate(existingClass._id,{
-        studentIds:newStudents,
-    },{
-        new:true
-    })
-
-    return res.status(200).json({
-        success:true,
-        data:newClass
-    })
-        
+        return res.status(200).json({
+            success:true,
+            data:newClass
+        })
     } catch (error) {
         console.log("Error in Adding Student Route : ",error)
         return res.status(500).json({
@@ -103,43 +102,36 @@ classRouter.post("/class/:id/add-student",checkTeacher,async(req,res)=>{
 
 classRouter.get("/class/:id",checkTeacherOrStudent,async(req,res)=>{
     try {
-
         const response=await Class.findById(req.params.id).populate({
-        path:"studentIds",
-        select:"name email"
-    })
-    const classData = response.toObject();
-    classData.students = classData.studentIds;
-    delete classData.studentIds;
-    
-    return res.status(200).json({
-        success:true,
-        data:classData
-    })
+            path:"studentIds",
+            select:"name email"
+        })
+        const classData = response.toObject();
+        classData.students = classData.studentIds;
+        delete classData.studentIds;
         
+        return res.status(200).json({
+            success:true,
+            data:classData
+        })
     } catch (error) {
-        console.log("Error in Adding Student Route : ",error)
+        console.log("Error in Getting Class Route : ",error)
         return res.status(500).json({
             success:false,
             error:"Internal Server Error"
         })
     }
 })
-
 
 classRouter.get("/students",checkTeacher,async(req,res)=>{
     try {
-
-     const response=await User.find({
-        role:"student"
-    })
-    return res.status(200).json({
-        success:true,
-        data:response
-    })
-        
+        const response = await User.find({ role: "student" }).select("-password");
+        return res.status(200).json({
+            success:true,
+            data:response
+        })
     } catch (error) {
-        console.log("Error in Adding Student Route : ",error)
+        console.log("Error in Getting Students Route : ",error)
         return res.status(500).json({
             success:false,
             error:"Internal Server Error"
@@ -147,46 +139,44 @@ classRouter.get("/students",checkTeacher,async(req,res)=>{
     }
 })
 
-
 classRouter.get("/class/:id/my-attendance",checkStudent,async(req,res)=>{
     try {
-     const existingClass=await Class.findById(req.params.id);
-    if(!existingClass){
-        return res.status(404).json({
-            success:false,
-            error:"Class not found"
+        const existingClass=await Class.findById(req.params.id);
+        if(!existingClass){
+            return res.status(404).json({
+                success:false,
+                error:"Class not found"
+            })
+        }
+        const isEnrolled = existingClass.studentIds.some(id => id.toString() === req.user._id.toString());
+        if(!isEnrolled){
+            return res.status(403).json({
+                success:false,
+                error:"Forbidden, not enrolled in class"
+            })
+        }
+        const attendance=await Attendance.findOne({
+            classId:existingClass._id,
+            studentId:req.user._id,
         })
-    }
-    const isEnrolled = existingClass.studentIds.some(id => id.toString() === req.user._id.toString());
-    if(!isEnrolled){
-        return res.status(403).json({
-            success:false,
-            error:"Forbidden, not enrolled in class"
-        })
-    }
-    const attendance=await Attendance.findOne({
-        classId:existingClass._id,
-        studentId:req.user._id,
-    })
-    if(!attendance || !attendance.status){
-        return res.status(200).json({
-            success:true,
-            data:{
-                classId:existingClass._id.toString(),
-                status:null
-            }       
-        })
-    }
-    else { 
-        return res.status(200).json({
-            success:true,
-            data:{
-                classId:existingClass._id.toString(),
-                status:attendance.status,
-            }       
-        })
-    }
-
+        if(!attendance || !attendance.status){
+            return res.status(200).json({
+                success:true,
+                data:{
+                    classId:existingClass._id.toString(),
+                    status:null
+                }       
+            })
+        }
+        else { 
+            return res.status(200).json({
+                success:true,
+                data:{
+                    classId:existingClass._id.toString(),
+                    status:attendance.status,
+                }       
+            })
+        }
     } catch (error) {
         console.log("Error in Checking My Attendance Route : ",error)
         return res.status(500).json({
@@ -197,55 +187,153 @@ classRouter.get("/class/:id/my-attendance",checkStudent,async(req,res)=>{
 })
 
 classRouter.post("/attendance/start",checkTeacher,async(req,res)=>{
-     try {
-        
-     const {success,data}=startAttendanceSchema.safeParse(req.body);   
-     if(!success){
-        return res.status(400).json({
-            success:false,
-            error:"Invalid request schema"
-        })
-    }
-    const existingClass=await Class.findById(data.classId);
-    if(!existingClass){
-        return res.status(404).json({
-            success:false,
-            error:"Class not found"
-        })
-    }
-    if(req.user._id.toString()!==existingClass.teacherId.toString()){
-        return res.status(403).json({
-            success:false,
-            error:"Forbidden, not class teacher"
-        })
-    }
-    if(global.activeSession!==null){
-        return res.status(400).json({
-            success:false,
-            error:"Already One Session Exists"
-        })
-    }
-    global.activeSession={
-        classId:data.classId,
-        startedAt:new Date().toISOString(),
-        attendance:{}
-    }
-    return res.status(200).json({
-        success:true,
-        data:{
-        classId:data.classId,
-        startedAt:new Date().toISOString()  
+    try {
+        const {success,data}=startAttendanceSchema.safeParse(req.body);   
+        if(!success){
+            return res.status(400).json({
+                success:false,
+                error:"Invalid request schema"
+            })
         }
-    })
-
-     } catch (error) {
-        console.log("Error in Checking My Attendance Route : ",error)
+        const existingClass=await Class.findById(data.classId);
+        if(!existingClass){
+            return res.status(404).json({
+                success:false,
+                error:"Class not found"
+            })
+        }
+        if(req.user._id.toString()!==existingClass.teacherId.toString()){
+            return res.status(403).json({
+                success:false,
+                error:"Forbidden, not class teacher"
+            })
+        }
+        if(global.activeSession!==null){
+            return res.status(400).json({
+                success:false,
+                error:"Already One Session Exists"
+            })
+        }
+        global.activeSession={
+            classId:data.classId,
+            startedAt:new Date().toISOString(),
+            attendance:{}
+        }
+        return res.status(200).json({
+            success:true,
+            data:{
+                classId:data.classId,
+                startedAt:new Date().toISOString()  
+            }
+        })
+    } catch (error) {
+        console.log("Error in Starting Attendance Route : ",error)
         return res.status(500).json({
             success:false,
             error:"Internal Server Error"
         })
-     }
+    }
 })
 
+classRouter.post("/attendance/mark",checkTeacher,async(req,res)=>{
+    try {
+        if(!global.activeSession){
+            return res.status(400).json({
+                success:false,
+                error:"No active attendance session"
+            })
+        }
+
+        const {studentId, status} = req.body;
+        if(!studentId || !status){
+            return res.status(400).json({
+                success:false,
+                error:"Invalid request schema"
+            })
+        }
+
+        if(status !== "present" && status !== "absent"){
+            return res.status(400).json({
+                success:false,
+                error:"Invalid status"
+            })
+        }
+
+        global.activeSession.attendance[studentId] = status;
+
+        return res.status(200).json({
+            success:true,
+            data:{
+                studentId,
+                status
+            }
+        })
+    } catch (error) {
+        console.log("Error in Marking Attendance Route : ",error)
+        return res.status(500).json({
+            success:false,
+            error:"Internal Server Error"
+        })
+    }
+})
+
+classRouter.post("/attendance/done",checkTeacher,async(req,res)=>{
+    try {
+        if(!global.activeSession){
+            return res.status(400).json({
+                success:false,
+                error:"No active attendance session"
+            })
+        }
+
+        const classId = global.activeSession.classId;
+        const existingClass = await Class.findById(classId);
+        
+        if(!existingClass){
+            return res.status(404).json({
+                success:false,
+                error:"Class not found"
+            })
+        }
+
+        for(const studentId of existingClass.studentIds){
+            const studentIdStr = studentId.toString();
+            const status = global.activeSession.attendance[studentIdStr] || "absent";
+            
+            await Attendance.findOneAndUpdate(
+                {classId: classId, studentId: studentId},
+                {classId: classId, studentId: studentId, status: status},
+                {upsert: true}
+            );
+        }
+
+        const attendanceData = {};
+        for(const studentId of existingClass.studentIds){
+            const studentIdStr = studentId.toString();
+            attendanceData[studentIdStr] = global.activeSession.attendance[studentIdStr] || "absent";
+        }
+
+        global.activeSession = null;
+
+        const presentCount = Object.values(attendanceData).filter(s => s === "present").length;
+        const absentCount = Object.values(attendanceData).filter(s => s === "absent").length;
+
+        return res.status(200).json({
+            success:true,
+            data:{
+                classId,
+                presentCount,
+                absentCount,
+                totalStudents: existingClass.studentIds.length
+            }
+        })
+    } catch (error) {
+        console.log("Error in Completing Attendance Route : ",error)
+        return res.status(500).json({
+            success:false,
+            error:"Internal Server Error"
+        })
+    }
+})
 
 export default classRouter;

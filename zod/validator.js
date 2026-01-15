@@ -7,21 +7,18 @@ export const signUpSchema=z.object({
     role:z.enum(["teacher","student"])
 })
 
-
 export const loginSchema=z.object({
     email:z.email(),
     password:z.string().min(6),
 })
-
 
 export const tokenSchema=z.object({
     userId:z.string(),
     role:z.enum(["teacher","student"])
 })
 
-
 export const classSchema=z.object({
-    className:z.string().min(3).max(10)
+    className:z.string().min(1)
 })
 
 export const addStudentSchema=z.object({

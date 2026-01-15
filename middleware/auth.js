@@ -5,230 +5,223 @@ import { User } from "../models/user.model.js";
 import { Class } from "../models/class.model.js";
 dotenv.config()
 
+function extractToken(authHeader) {
+    if (!authHeader) return null
+    if (authHeader.startsWith("Bearer ")) {
+        return authHeader.slice(7)
+    }
+    return authHeader
+}
+
 export async function authMiddleware(req,res,next){
     try {
-    const authHeaders=req.headers.authorization;
-    if(!authHeaders){
+        const authHeader = req.headers.authorization
+        const token = extractToken(authHeader)
+        
+        if(!token){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
+        }
+
+        const validToken = jwt.verify(token, process.env.JWT_SECRET)
+        if(!validToken){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
+        }
+
+        const {success, data} = tokenSchema.safeParse(validToken)
+        if(!success){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
+        }
+
+        req.token = validToken
+        next()
+    } catch (error) {
+        console.log("Error in Middleware ", error)
         return res.status(401).json({
             success:false,
             error:"Unauthorized, token missing or invalid"
         })
     }
-    const token=authHeaders.split(" ")[1];
-     if(!token){
-        return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-    const validToken=jwt.verify(token,process.env.JWT_SECRET);
-    if(!validToken){
-     return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-    const {success,data}=tokenSchema.safeParse(validToken);
-    if(!success){
-         return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-    req.token=validToken
-    next()
-
-} catch (error) {
-    console.log("Error in Middleware ",error);
-    return res.status(500).json({
-            success:false,
-            error:"Internal Server Error"
-        })
 }
-}
-
-
 
 export async function checkTeacher(req,res,next){
-     try {
-    const authHeaders=req.headers.authorization;
-    if(!authHeaders){
+    try {
+        const authHeader = req.headers.authorization
+        const token = extractToken(authHeader)
+        
+        if(!token){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
+        }
+
+        const validToken = jwt.verify(token, process.env.JWT_SECRET)
+        if(!validToken){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
+        }
+
+        const {success, data} = tokenSchema.safeParse(validToken)
+        if(!success){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
+        }
+
+        const user = await User.findById(data.userId)
+        if(!user || user.role !== "teacher"){
+            return res.status(403).json({
+                success:false,
+                error:"Forbidden, teacher access required"
+            })
+        }
+
+        req.user = user
+        req.token = validToken
+        next()
+    } catch (error) {
+        console.log("Error in Teacher Middleware ", error)
         return res.status(401).json({
             success:false,
             error:"Unauthorized, token missing or invalid"
         })
     }
-    const token=authHeaders.split(" ")[1];
-     if(!token){
-        return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-    const validToken=jwt.verify(token,process.env.JWT_SECRET);
-    if(!validToken){
-     return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-    const {success,data}=tokenSchema.safeParse(validToken);
-    if(!success){
-         return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-
-    const user=await User.findById(data.userId);
-    if(!user || user.role!=="teacher"){
-        return res.status(403).json({
-            success:false,
-            error:"Forbidden, teacher access required"
-        })
-    }
-    req.user=user
-    next()
-
-
-} catch (error) {
-    console.log("Error in Teacher Middleware ",error);
-    return res.status(500).json({
-            success:false,
-            error:"Internal Server Error"
-        })
 }
-}
-
-
-
 
 export async function checkStudent(req,res,next){
-     try {
-    const authHeaders=req.headers.authorization;
-    if(!authHeaders){
+    try {
+        const authHeader = req.headers.authorization
+        const token = extractToken(authHeader)
+        
+        if(!token){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
+        }
+
+        const validToken = jwt.verify(token, process.env.JWT_SECRET)
+        if(!validToken){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
+        }
+
+        const {success, data} = tokenSchema.safeParse(validToken)
+        if(!success){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
+        }
+
+        const user = await User.findById(data.userId)
+        if(!user || user.role !== "student"){
+            return res.status(403).json({
+                success:false,
+                error:"Forbidden, student access required"
+            })
+        }
+
+        req.user = user
+        req.token = validToken
+        next()
+    } catch (error) {
+        console.log("Error in Student Middleware ", error)
         return res.status(401).json({
             success:false,
             error:"Unauthorized, token missing or invalid"
         })
     }
-    const token=authHeaders.split(" ")[1];
-     if(!token){
-        return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-    const validToken=jwt.verify(token,process.env.JWT_SECRET);
-    if(!validToken){
-     return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-    const {success,data}=tokenSchema.safeParse(validToken);
-    if(!success){
-         return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-
-    const user=await User.findById(data.userId);
-    if(!user || user.role!=="student"){
-        return res.status(403).json({
-            success:false,
-            error:"Forbidden, student access required"
-        })
-    }
-    req.user=user
-    next()
-
-
-} catch (error) {
-    console.log("Error in Student Middleware ",error);
-    return res.status(500).json({
-            success:false,
-            error:"Internal Server Error"
-        })
 }
-}
-
-
 
 export async function checkTeacherOrStudent(req,res,next){
-
-      try {
-    const authHeaders=req.headers.authorization;
-    if(!authHeaders){
-        return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-    const token=authHeaders.split(" ")[1];
-     if(!token){
-        return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-    const validToken=jwt.verify(token,process.env.JWT_SECRET);
-    if(!validToken){
-     return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-    const {success,data}=tokenSchema.safeParse(validToken);
-    if(!success){
-         return res.status(401).json({
-            success:false,
-            error:"Unauthorized, token missing or invalid"
-        })
-    }
-    const userId=data.userId;
-    const user=await User.findById(userId);
-    if(!user){
-        return res.status(404).json({
-            success:false,
-            error:"User not found"
-        })
-    }
-    const existingClass=await Class.findById(req.params.id);
-    if(!existingClass){
-        return res.status(404).json({
-            success:false,
-            error:"Class not found"
-        })
-    }
-    let isTeacher=false
-    let isStudent=false
-    if(userId===existingClass.teacherId.toString()){
-        isTeacher=true;
-    }
-    for (const studentId of existingClass.studentIds){
-        if(userId===studentId.toString()){
-            isStudent=true
-            break
+    try {
+        const authHeader = req.headers.authorization
+        const token = extractToken(authHeader)
+        
+        if(!token){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
         }
-    }
-    if(isTeacher || isStudent){
-        req.class=existingClass
-        next()
-    }
-    else{
-        return res.status(403).json({
-          success:false,
-          error:"Forbidden, not class teacher"  
-        })
-    }
 
-} catch (error) {
-    console.log("Error in Student Teacher Middleware ",error);
-    return res.status(500).json({
+        const validToken = jwt.verify(token, process.env.JWT_SECRET)
+        if(!validToken){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
+        }
+
+        const {success, data} = tokenSchema.safeParse(validToken)
+        if(!success){
+            return res.status(401).json({
+                success:false,
+                error:"Unauthorized, token missing or invalid"
+            })
+        }
+
+        const userId = data.userId
+        const user = await User.findById(userId)
+        if(!user){
+            return res.status(404).json({
+                success:false,
+                error:"User not found"
+            })
+        }
+
+        const existingClass = await Class.findById(req.params.id)
+        if(!existingClass){
+            return res.status(404).json({
+                success:false,
+                error:"Class not found"
+            })
+        }
+
+        let isTeacher = false
+        let isStudent = false
+        if(userId === existingClass.teacherId.toString()){
+            isTeacher = true
+        }
+        for (const studentId of existingClass.studentIds){
+            if(userId === studentId.toString()){
+                isStudent = true
+                break
+            }
+        }
+
+        if(isTeacher || isStudent){
+            req.class = existingClass
+            req.user = user
+            req.token = validToken
+            next()
+        }
+        else{
+            return res.status(403).json({
+                success:false,
+                error:"Forbidden, not class teacher"  
+            })
+        }
+    } catch (error) {
+        console.log("Error in Student Teacher Middleware ", error)
+        return res.status(401).json({
             success:false,
-            error:"Internal Server Error"
+            error:"Unauthorized, token missing or invalid"
         })
-}
+    }
 }

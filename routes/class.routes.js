@@ -14,7 +14,7 @@ classRouter.post("/class",checkTeacher,async(req,res)=>{
         if(!success){
         return res.status(400).json({
             success:false,
-            error:"Invalid Request Schema"
+            error:"Invalid request schema"
         })
     }
     const teacher=await User.findById(req.user._id.toString());
@@ -52,10 +52,9 @@ classRouter.post("/class/:id/add-student",checkTeacher,async(req,res)=>{
       if(!success){
         return res.status(400).json({
             success:false,
-            error:"Invalid Request Schema"
+            error:"Invalid request schema"
         })
     }
-    // Validate Student
     const student=await User.findById(data.studentId);
     if(!student){
         return res.status(404).json({
@@ -63,7 +62,6 @@ classRouter.post("/class/:id/add-student",checkTeacher,async(req,res)=>{
             error:"Student not found"
         })
     }
-    // Validate Teacher owns Class
     if(existingClass.teacherId.toString()!==req.user._id.toString()){
         return res.status(403).json({
             success:false,
@@ -205,7 +203,7 @@ classRouter.post("/attendance/start",checkTeacher,async(req,res)=>{
      if(!success){
         return res.status(400).json({
             success:false,
-            error:"Invalid Request Schema"
+            error:"Invalid request schema"
         })
     }
     const existingClass=await Class.findById(data.classId);
@@ -221,7 +219,6 @@ classRouter.post("/attendance/start",checkTeacher,async(req,res)=>{
             error:"Forbidden, not class teacher"
         })
     }
-    // Check if already Session Exists or not 
     if(global.activeSession!==null){
         return res.status(400).json({
             success:false,

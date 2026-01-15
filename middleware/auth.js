@@ -21,7 +21,6 @@ export async function authMiddleware(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Validate Token
     const validToken=jwt.verify(token,process.env.JWT_SECRET);
     if(!validToken){
      return res.status(401).json({
@@ -29,7 +28,6 @@ export async function authMiddleware(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Validate Token Schema
     const {success,data}=tokenSchema.safeParse(validToken);
     if(!success){
          return res.status(401).json({
@@ -37,7 +35,6 @@ export async function authMiddleware(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Check if userId exist in DB
     req.token=validToken
     next()
 
@@ -68,7 +65,6 @@ export async function checkTeacher(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Validate Token
     const validToken=jwt.verify(token,process.env.JWT_SECRET);
     if(!validToken){
      return res.status(401).json({
@@ -76,7 +72,6 @@ export async function checkTeacher(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Validate Token Schema
     const {success,data}=tokenSchema.safeParse(validToken);
     if(!success){
          return res.status(401).json({
@@ -84,13 +79,12 @@ export async function checkTeacher(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Check if userId has role teacher
 
     const user=await User.findById(data.userId);
-    if(user.role!=="teacher"){
+    if(!user || user.role!=="teacher"){
         return res.status(403).json({
             success:false,
-            error:"Forbidden, not class teacher"
+            error:"Forbidden, teacher access required"
         })
     }
     req.user=user
@@ -125,7 +119,6 @@ export async function checkStudent(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Validate Token
     const validToken=jwt.verify(token,process.env.JWT_SECRET);
     if(!validToken){
      return res.status(401).json({
@@ -133,7 +126,6 @@ export async function checkStudent(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Validate Token Schema
     const {success,data}=tokenSchema.safeParse(validToken);
     if(!success){
          return res.status(401).json({
@@ -141,13 +133,12 @@ export async function checkStudent(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Check if userId has role teacher
 
     const user=await User.findById(data.userId);
-    if(user.role!=="student"){
+    if(!user || user.role!=="student"){
         return res.status(403).json({
             success:false,
-            error:"Forbidden, not a student"
+            error:"Forbidden, student access required"
         })
     }
     req.user=user
@@ -182,7 +173,6 @@ export async function checkTeacherOrStudent(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Validate Token
     const validToken=jwt.verify(token,process.env.JWT_SECRET);
     if(!validToken){
      return res.status(401).json({
@@ -190,7 +180,6 @@ export async function checkTeacherOrStudent(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Validate Token Schema
     const {success,data}=tokenSchema.safeParse(validToken);
     if(!success){
          return res.status(401).json({
@@ -198,7 +187,6 @@ export async function checkTeacherOrStudent(req,res,next){
             error:"Unauthorized, token missing or invalid"
         })
     }
-    // Check if userId has role teacher
     const userId=data.userId;
     const user=await User.findById(userId);
     if(!user){
@@ -232,7 +220,7 @@ export async function checkTeacherOrStudent(req,res,next){
     else{
         return res.status(403).json({
           success:false,
-          error:"No Student or Teacher of Class"  
+          error:"Forbidden, not class teacher"  
         })
     }
 

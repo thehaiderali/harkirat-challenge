@@ -202,7 +202,7 @@ export async function checkTeacherOrStudent(req,res,next){
     const userId=data.userId;
     const user=await User.findById(userId);
     if(!user){
-        res.status(404).json({
+        return res.status(404).json({
             success:false,
             error:"User not found"
         })
@@ -216,7 +216,7 @@ export async function checkTeacherOrStudent(req,res,next){
     }
     let isTeacher=false
     let isStudent=false
-    if(userId===existingClass.teacherId){
+    if(userId===existingClass.teacherId.toString()){
         isTeacher=true;
     }
     for (const studentId of existingClass.studentIds){

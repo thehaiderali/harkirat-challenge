@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import { Class } from "../models/class.model.js";
 import { checkStudent, checkTeacher, checkTeacherOrStudent } from "../middleware/auth.js";
 import { Attendance } from "../models/attendance.model.js";
+import { Types } from "mongoose";
 
 const classRouter=Router();
 
@@ -69,8 +70,19 @@ classRouter.post("/class/:id/add-student",checkTeacher,async(req,res)=>{
             error:"Forbidden, not class teacher"
         })
     }
+    const alreadyEnrolled = existingClass.studentIds.some(
+    id => id.toString() === data.studentId
+    );
+
+    if(alreadyEnrolled){
+        return res.status(400).json({
+            success:false,
+            error:"Student already enrolled in this class"
+        })
+    }
+
     const oldstudents=existingClass.studentIds
-    const newStudents=[...oldstudents,data.studentId]
+    const newStudents=[...oldstudents,new Types.ObjectId(data.studentId)]
     const newClass=await Class.findByIdAndUpdate(existingClass._id,{
         studentIds:newStudents,
     },{

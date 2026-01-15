@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attendance System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex flex-col">
+    <nav class="bg-indigo-600 p-4 text-white shadow-md">
+      <div
+        class="container mx-auto flex justify-between items-center"
+        id="navbar"
+      >
+        <a href="#" class="text-2xl font-bold">Attendance App</a>
+        <div>
+          <button id="nav-signup" class="mr-4 hover:underline hidden">
+            Signup
+          </button>
+          <button id="nav-login" class="mr-4 hover:underline hidden">
+            Login
+          </button>
+          <span id="nav-username" class="mr-4 hidden"></span>
+          <button id="nav-logout" class="hover:underline hidden">
+            Logout
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container mx-auto p-4 flex-grow">
+      <div id="auth-section" class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md mt-8">
+        <!-- Signup Form -->
+        <div id="signup-container" class="mb-8">
+          <h2 class="text-2xl font-bold mb-4 text-center">Signup</h2>
+          <form id="signup-form" class="space-y-4">
+            <div>
+              <label for="signup-name" class="block text-sm font-medium text-gray-700">Name</label>
+              <input type="text" id="signup-name" name="name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
+            </div>
+            <div>
+              <label for="signup-email" class="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" id="signup-email" name="email" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
+            </div>
+            <div>
+              <label for="signup-password" class="block text-sm font-medium text-gray-700">Password</label>
+              <input type="password" id="signup-password" name="password" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
+            </div>
+            <div>
+              <label for="signup-role" class="block text-sm font-medium text-gray-700">Role</label>
+              <select id="signup-role" name="role" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+              </select>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white p-2 rounded-md hover:bg-indigo-700">Signup</button>
+          </form>
+          <p id="signup-message" class="mt-4 text-center text-sm"></p>
+          <p class="mt-4 text-center text-sm">Already have an account? <button id="show-login-form" class="text-indigo-600 hover:underline">Login</button></p>
+        </div>
+
+        <!-- Login Form -->
+        <div id="login-container" class="hidden">
+          <h2 class="text-2xl font-bold mb-4 text-center">Login</h2>
+          <form id="login-form" class="space-y-4">
+            <div>
+              <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" id="login-email" name="email" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
+            </div>
+            <div>
+              <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
+              <input type="password" id="login-password" name="password" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white p-2 rounded-md hover:bg-indigo-700">Login</button>
+          </form>
+          <p id="login-message" class="mt-4 text-center text-sm"></p>
+          <p class="mt-4 text-center text-sm">Don't have an account? <button id="show-signup-form" class="text-indigo-600 hover:underline">Signup</button></p>
+        </div>
+      </div>
+
+      <!-- Teacher Dashboard -->
+      <div id="teacher-dashboard" class="hidden max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md mt-8">
+        <h2 class="text-2xl font-bold mb-4 text-center">Teacher Dashboard</h2>
+        <h3 class="text-xl font-semibold mb-2">Create New Class</h3>
+        <form id="create-class-form" class="space-y-4 mb-8">
+          <div>
+            <label for="class-name" class="block text-sm font-medium text-gray-700">Class Name</label>
+            <input type="text" id="class-name" name="className" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" />
+          </div>
+          <button type="submit" class="w-full bg-green-600 text-white p-2 rounded-md hover:bg-green-700">Create Class</button>
+        </form>
+        <p id="create-class-message" class="mt-4 text-center text-sm"></p>
+
+        <h3 class="text-xl font-semibold mb-2">Your Classes</h3>
+        <div id="teacher-classes" class="space-y-4">
+          <p class="text-center text-gray-500">No classes created yet.</p>
+        </div>
+      </div>
+
+      <!-- Teacher Class Details View -->
+      <div id="teacher-class-details" class="hidden max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md mt-8">
+        <button id="back-to-teacher-dashboard" class="text-indigo-600 hover:underline mb-4">&larr; Back to Dashboard</button>
+        <h2 id="teacher-class-name" class="text-2xl font-bold mb-4 text-center"></h2>
+
+        <h3 class="text-xl font-semibold mb-2">Add Student to Class</h3>
+        <form id="add-student-form" class="space-y-4 mb-8">
+          <div>
+            <label for="select-student" class="block text-sm font-medium text-gray-700">Select Student</label>
+            <select id="select-student" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+              <!-- Options will be loaded dynamically -->
+            </select>
+          </div>
+          <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700">Add Student</button>
+        </form>
+        <p id="add-student-message" class="mt-4 text-center text-sm"></p>
+
+        <h3 class="text-xl font-semibold mb-2">Enrolled Students</h3>
+        <div id="enrolled-students" class="space-y-2">
+          <p class="text-center text-gray-500">No students enrolled yet.</p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-8 mb-2">Attendance Session</h3>
+        <div id="attendance-session-info" class="mb-4">
+          <p id="active-session-status" class="text-lg font-medium">No active attendance session.</p>
+          <p id="active-session-time" class="text-sm text-gray-600"></p>
+        </div>
+        <button id="start-attendance-btn" class="w-full bg-purple-600 text-white p-2 rounded-md hover:bg-purple-700">
+          Start Attendance Session
+        </button>
+        <button id="end-attendance-btn" class="w-full bg-red-600 text-white p-2 rounded-md hover:bg-red-700 mt-2 hidden">
+          End Attendance Session
+        </button>
+        <p id="attendance-session-message" class="mt-4 text-center text-sm"></p>
+      </div>
+
+      <!-- Student Dashboard -->
+      <div id="student-dashboard" class="hidden max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md mt-8">
+        <h2 class="text-2xl font-bold mb-4 text-center">Student Dashboard</h2>
+        <h3 class="text-xl font-semibold mb-2">Your Classes</h3>
+        <div id="student-classes" class="space-y-4">
+          <p class="text-center text-gray-500">You are not enrolled in any classes yet.</p>
+        </div>
+      </div>
+
+      <!-- Student Class Details View -->
+      <div id="student-class-details" class="hidden max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md mt-8">
+        <button id="back-to-student-dashboard" class="text-indigo-600 hover:underline mb-4">&larr; Back to Dashboard</button>
+        <h2 id="student-class-name" class="text-2xl font-bold mb-4 text-center"></h2>
+
+        <h3 class="text-xl font-semibold mb-2">My Attendance Status</h3>
+        <p id="my-attendance-status" class="text-lg font-medium">Loading...</p>
+
+        <h3 class="text-xl font-semibold mt-8 mb-2">Mark Attendance</h3>
+        <p id="mark-attendance-info" class="mb-4">No active attendance session for this class.</p>
+        <button id="mark-present-btn" class="w-full bg-green-500 text-white p-2 rounded-md hover:bg-green-600 hidden">
+          Mark Me Present
+        </button>
+        <p id="mark-attendance-message" class="mt-4 text-center text-sm"></p>
+      </div>
+    </main>
+
+    <script src="/script.js"></script>
+  </body>
+</html>

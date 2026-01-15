@@ -1,5 +1,5 @@
 import {Router} from "express";
-import { addStudentSchema, classSchema } from "../zod/validator";
+import { addStudentSchema, classSchema, startAttendanceSchema } from "../zod/validator";
 import { User } from "../models/user.model";
 import { Class } from "../models/class.model";
 import { checkStudent, checkTeacher, checkTeacherOrStudent } from "../middleware/auth";
@@ -186,7 +186,57 @@ classRouter.get("/class/:id/my-attendance",checkStudent,async(req,res)=>{
     }
 })
 
+classRouter.post("/attendance/start",checkTeacher,async(req,res)=>{
+     try {
+        
+     const {success,data}=startAttendanceSchema.safeParse(req.body);   
+     if(!success){
+        return res.status(400).json({
+            success:false,
+            error:"Invalid Request Schema"
+        })
+    }
+    const existingClass=await Class.findById(data.classId);
+    if(!existingClass){
+        return res.status(404).json({
+            success:false,
+            error:"Class not found"
+        })
+    }
+    if(req.user._id!==existingClass.teacherId){
+        return res.status(403).json({
+            success:false,
+            error:"Forbidden, not class teacher"
+        })
+    }
+    // Check if already Session Exists or not 
+    if(global.activeSession!==null){
+        return res.status(400).json({
+            success:false,
+            error:"Already One Session Exists"
+        })
+    }
+    global.activeSession={
+        classId:data.classId,
+        startedAt:new Date().toISOString(),
+        attendance:{}
+    }
+    return res.status(200).json({
+        success:true,
+        data:{
+        classId:data.classId,
+        startedAt:new Date().toISOString()  
+        }
+    })
 
+     } catch (error) {
+        console.log("Error in Checking My Attendance Route : ",error)
+        return res.status(500).json({
+            success:false,
+            error:"Internal Server Error"
+        })
+     }
+})
 
 
 export default classRouter;

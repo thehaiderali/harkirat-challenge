@@ -7,6 +7,7 @@ const app=express()
 app.use(express.json())
 app.use("/auth",authRouter)
 const port = process.env.PORT || 3000
+global.activeSession=null;
 app.listen(port,async()=>{
     console.log("Server Started at port  : ",port)
     try {

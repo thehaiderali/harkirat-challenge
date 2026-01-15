@@ -81,7 +81,7 @@ authRouter.post("/login",async(req,res)=>{
     if(!already){
         return res.status(400).json({
             success:false,
-            error:"Invalid email or password"
+            error:"Invalid request schema"
         })
     }
     // Validate Password
@@ -135,7 +135,7 @@ authRouter.get("/me",authMiddleware,async(req,res)=>{
     }
     const userResponse=user.toObject();
     delete userResponse.password;
-    return res.status(201).json({
+    return res.status(200).json({
         success:true,
         data:userResponse
     })

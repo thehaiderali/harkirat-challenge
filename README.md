@@ -53,7 +53,6 @@ This project implements a live attendance system with a RESTful API backend (bui
 └───public                   // Frontend static files
     ├───index.html           // Main HTML page for the frontend
     └───script.js            // Frontend JavaScript logic
-└───test.js                  // Puppeteer script for end-to-end testing
 ```
 
 ## How to Run
